@@ -1,5 +1,7 @@
 {-# LANGUAGE OverloadedLabels, DataKinds, UndecidableInstances, PolyKinds, TypeApplications #-}
-{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
+
+{-# LANGUAGE PartialTypeSignatures #-}
+{-# OPTIONS_GHC -fno-warn-missing-signatures, -fno-warn-orphans #-}
 {-# OPTIONS_GHC -fprint-explicit-kinds -fprint-potential-instances #-}
 {-|
 
@@ -84,19 +86,21 @@ relate RFind to RElem
 main = do
   print "Eight"
   print $ point
-  print $ #x point
-  print $ #y point
+  -- print $ #x point
+  -- print $ #y point
+
   --
   -- print $ p1
   -- print $ #a p1
 
-  -- print $ p2
+  print $ p2
   -- print $ #a p2
   -- print $ #b p2
+
   --
   print $ p3
-  print $ #a p3
-  print $ #b p3
+  -- print $ #a p3
+  -- print $ #b p3
 
 x = Proxy :: Proxy ("x" ::: Int)
 y = Proxy :: Proxy ("y" ::: Int)
@@ -135,10 +139,29 @@ type Record = Rec ElField
 --   = #a 'a'
 --  :& #b True
 --  :& nil
+
 -- p2
---    = #a 'a'
---   #- #b True
---   #- nil
+--   = #a 'a'
+--   # #b True
+--   # nil
+
+p2
+  = #a 'a'
+  # #b True
+  # nil
+  :: Record ['("a",Char),'("b",Bool)]
+
+  -- yes:
+  -- :: Record ['("a",Char),'("b",Bool)]
+
+  -- no:
+  -- :: _
+  -- :: Record _
+  -- :: Record ['("a",_),'("b",_)]
+  -- :: Record ['(_,Char),'(_,Bool)]
+
+  -- :: Record ['("a",Char),'("b",Bool)]
+  -- :: Record ['("a",Char),'("b",Bool)]
 
 p3
    = field @"a" "a"
@@ -173,15 +196,18 @@ type family Second (f :: (b -> c)) (pair :: (a,b)) :: (a,c) where
 -- instance (a ~ RFind s fields) => IsLabel s (Record fields -> a) where -- UndecidableInstances
 --  fromLabel _ = getField . rget (Proxy :: Proxy '(s,a))
 
-instance -- UndecidableInstances
- ( '(a,i) ~ RFind s fields
- , RElem '(s,a) fields i
- ) =>
 
- IsLabel s (Record fields -> a)
- where
-
- fromLabel _ = getField . rget (Proxy :: Proxy '(s,a))
+-- {{ overlaps with field constructor }}
+--
+-- instance -- UndecidableInstances
+--  ( '(a,i) ~ RFind s fields
+--  , RElem '(s,a) fields i
+--  ) =>
+--
+--  IsLabel s (Record fields -> a)
+--  where
+--
+--  fromLabel _ = getField . rget (Proxy :: Proxy '(s,a))
 
 -- field :: proxy '(s,a) -> Field '(s,a)
 -- field _ = Field
@@ -216,10 +242,11 @@ or
 @
 
 -}
--- instance (KnownSymbol s) => IsLabel s (a -> ElField '(s,a)) where
+-- {{ overlaps with record accessor }}
 --
---  fromLabel _ = Field
+instance (KnownSymbol s) => IsLabel s (a -> ElField '(s,a)) where
+ fromLabel _ = Field
 
-(#-) :: F s a -> Record fields -> Record ('(s,a) ': fields)
-(#-) = (:&)
-infixr 7 #- -- as tightly as :&
+(#) :: F s a -> Record fields -> Record ('(s,a) ': fields)
+(#) = (:&)
+infixr 7 # -- as tightly as :&
