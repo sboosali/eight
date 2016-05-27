@@ -51,6 +51,34 @@ relate RFind to RElem
 
 3.
 
+ • Ambiguous type variables ‘a0’, ‘r1’ arising from the overloaded label ‘#b’
+       prevents the constraint ‘(IsLabel
+                                   "b" (Bool -> a0 r1))’ from being solved.
+         (maybe you haven't applied a function to enough arguments?)
+       Relevant bindings include
+         p2 :: Rec a0 '[r0, r1] (bound at sources/Eight.hs:103:1)
+
+         p2
+           = #a 'a'
+          :& #b True
+          :& nil
+
+{{ #key }} needs inference-support
+
+
+
+4.
+
+• Overlapping instances for IsLabel
+                               "a" (Rec ElField '['("a", [Char]), '("b", Char)] -> a6)
+     arising from the overloaded label ‘#a’
+   Matching instances:
+     instance ('(a, i) ~ RFind s fields, RElem '(s, a) fields i) =>
+              IsLabel s (Record fields -> a)
+     instance KnownSymbol s => IsLabel s (a -> ElField '(s, a))
+
+
+
 
 -}
 main = do
@@ -59,12 +87,16 @@ main = do
   print $ #x point
   print $ #y point
   --
+  -- print $ p1
+  -- print $ #a p1
+
   -- print $ p2
   -- print $ #a p2
-
+  -- print $ #b p2
+  --
   print $ p3
-  -- print $ (#a p3 :: Record ['("a",String), '("b",Char)])
   print $ #a p3
+  print $ #b p3
 
 x = Proxy :: Proxy ("x" ::: Int)
 y = Proxy :: Proxy ("y" ::: Int)
@@ -80,7 +112,7 @@ _ -: a = Field a
 
 infix 8 -: -- more tightly than :&
 
-type F = ElField
+type F s a = ElField '(s,a)
 
 type P = Proxy
 -- type (s ::: a) = ElField '(s,a)
@@ -100,15 +132,25 @@ point
 type Record = Rec ElField
 
 -- p2
---   = #a "a"
---  :& #b 'b'
+--   = #a 'a'
+--  :& #b True
 --  :& nil
+-- p2
+--    = #a 'a'
+--   #- #b True
+--   #- nil
 
 p3
    = field @"a" "a"
-  :& Field @"b" 'b'
+  :& Field @"b" True
+  -- :& (@"c" `Field` True)
   :& nil
 
+-- {{ parse error }}
+-- p1
+--   = (@"a" -: 'a')
+--  :& @"b" -: True
+--  :& nil
 
 -- type family RFind (s :: Symbol) (fields :: [(Symbol,Type)]) :: Type where
 --   RFind s ('(s,a) ': fields) = a
@@ -177,3 +219,7 @@ or
 -- instance (KnownSymbol s) => IsLabel s (a -> ElField '(s,a)) where
 --
 --  fromLabel _ = Field
+
+(#-) :: F s a -> Record fields -> Record ('(s,a) ': fields)
+(#-) = (:&)
+infixr 7 #- -- as tightly as :&
