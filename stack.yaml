@@ -1,0 +1,9 @@
+resolver: nightly-2016-05-27
+compiler: ghc-8.0
+
+packages:
+- .
+
+extra-deps:
+- vinyl-0.5.2
+
