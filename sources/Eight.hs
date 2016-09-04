@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedLabels, DataKinds, UndecidableInstances, PolyKinds, TypeApplications #-}
 
 {-# LANGUAGE PartialTypeSignatures #-}
-{-# OPTIONS_GHC -fno-warn-missing-signatures, -fno-warn-orphans #-}
+{-# OPTIONS_GHC -fno-warn-missing-signatures -fno-warn-orphans #-}
 {-# OPTIONS_GHC -fprint-explicit-kinds -fprint-potential-instances #-}
 {-|
 
